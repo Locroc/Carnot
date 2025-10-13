@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Learning Interface</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --active-section: #28a745;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --progress-bar-color: #007bff;
+            --progress-bar-bg: #e9ecef;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            padding: 20px 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .progress-svg-container { position: absolute; top: 55%; left: 0; width: 100%; height: 50px; z-index: 1; overflow: hidden; }
+        #progress-arrow-bg, #progress-arrow-fg { stroke-width: 8; stroke-linecap: round; fill: none; transition: all 0.4s ease-in-out; }
+        #progress-arrow-bg { stroke: var(--progress-bar-bg); }
+        #progress-arrow-fg { stroke: var(--progress-bar-color); }
+        .sections-container { display: flex; gap: 20px; position: relative; z-index: 2; }
+        .section-box { padding: 10px; box-sizing: border-box; text-align: center; border: 2px solid var(--border-color); border-radius: 8px; background-color: var(--panel-bg); cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        
+        /* Flex-grow rules for the 2:3:2:2:4 ratio */
+        .section-box:nth-child(1) { flex-grow: 2; }
+        .section-box:nth-child(2) { flex-grow: 3; }
+        .section-box:nth-child(3) { flex-grow: 2; }
+        .section-box:nth-child(4) { flex-grow: 2; }
+        .section-box:nth-child(5) { flex-grow: 4; }
+
+        .section-icon { width: 40px; height: 40px; border-radius: 5px; background-color: transparent; background-size: cover; background-position: center; }
+        .section-box:nth-child(1) .section-icon { background-image: url('https://placehold.co/60x60/007bff/FFFFFF/png?text=1'); }
+        .section-box:nth-child(2) .section-icon { background-image: url('https://placehold.co/60x60/28a745/FFFFFF/png?text=2'); }
+        .section-box:nth-child(3) .section-icon { background-image: url('https://placehold.co/60x60/dc3545/FFFFFF/png?text=3'); }
+        .section-box:nth-child(4) .section-icon { background-image: url('https://placehold.co/60x60/ffc107/FFFFFF/png?text=4'); }
+        .section-box:nth-child(5) .section-icon { background-image: url('https://placehold.co/60x60/17a2b8/FFFFFF/png?text=5'); }
+        .section-title { font-weight: bold; font-size: 0.9em; }
+        .section-box.completed { border-color: var(--primary-color); background-color: #e7f3ff; }
+        .section-box.active { border-color: var(--active-section); background-color: #eaf7ed; transform: translateY(-5px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        main { flex-grow: 1; display: flex; padding: 30px; gap: 30px; }
+        #text-panel, #graphics-panel { background-color: var(--panel-bg); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
+        #text-panel { flex: 0 0 30%; padding: 25px; overflow-y: auto; }
+        #graphics-panel { flex: 1 1 70%; position: relative; }
+        .interactive-page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1.2rem; color: var(--secondary-color); opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s; }
+        .interactive-page.active-page { opacity: 1; visibility: visible; }
+        footer { padding: 15px 30px; background-color: var(--panel-bg); border-top: 1px solid var(--border-color); text-align: center; }
+        .nav-button { padding: 12px 24px; border: none; background-color: var(--primary-color); color: white; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; margin: 0 10px; transition: background-color 0.2s; }
+        .nav-button:hover { background-color: #0056b3; }
+        .nav-button:disabled { background-color: var(--secondary-color); cursor: not-allowed; }
+        
+        .feedback { margin-top: 15px; font-weight: bold; }
+        .feedback.correct { color: var(--success-color); }
+        .feedback.incorrect { color: var(--danger-color); }
+
+        .train-interaction-container { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .train-image-wrapper { position: relative; width: 800px; height: 450px; overflow: hidden; border-radius: 8px; background-color: #f8f8f8; margin-bottom: 20px; }
+        #train-image-scaler { width: 100%; height: 100%; transition: transform 0.3s ease-in-out; transform-origin: 30% 75%; }
+        #train-image-scaler img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; transition: opacity 0.2s ease-in-out; }
+        #piston-schematic { opacity: 0; }
+        .hotspot { position: absolute; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s ease, background-color 0.2s ease; border-radius: 5px; }
+        .correctly-answered .hotspot { pointer-events: none; }
+        .hotspot:hover { background-color: rgba(0, 123, 255, 0.2); }
+        #train-feedback { margin-top: 10px; font-size: 1em; }
+        #zoom-slider-container { width: 80%; max-width: 500px; margin-top: 10px; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; }
+        #zoom-slider-container.active { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="progress-svg-container">
+            <svg width="100%" height="100%" viewBox="0 0 1200 50" preserveAspectRatio="none">
+                <line id="progress-arrow-bg" x1="0" y1="25" x2="1200" y2="25" />
+                <line id="progress-arrow-fg" x1="0" y1="25" x2="0" y2="25" />
+            </svg>
+        </div>
+        <div class="sections-container">
+            <div class="section-box" data-section="1"><div class="section-icon"></div><span class="section-title">Reality</span></div>
+            <div class="section-box" data-section="2"><div class="section-icon"></div><span class="section-title">Idealization</span></div>
+            <div class="section-box" data-section="3"><div class="section-icon"></div><span class="section-title">Discretization</span></div>
+            <div class="section-box" data-section="4"><div class="section-icon"></div><span class="section-title">Geometric</span></div>
+            <div class="section-box" data-section="5"><div class="section-icon"></div><span class="section-title">Algebraic</span></div>
+        </div>
+    </header>
+
+    <main>
+        <aside id="text-panel"></aside>
+        <section id="graphics-panel">
+            <div class="interactive-page" data-page-index="0">
+                <div class="train-image-wrapper">
+                    <img src="Engine.jpg" alt="A steam train engine"> 
+                </div>
+            </div>
+            
+            <div class="interactive-page" data-page-index="1">
+                <div class="train-interaction-container" id="train-interaction-container">
+                    <div class="train-image-wrapper">
+                        <div id="train-image-scaler">
+                            <img id="main-engine-image" src="Engine.jpg" alt="Detailed steam train illustration">
+                            <img id="piston-schematic" src="piston.svg" alt="Schematic of a steam engine piston" style="max-width: 100%; max-height: 100%;">
+                        </div>
+                        <div class="hotspot" style="left: 23%; top: 22%; width: 9%; height: 20%;" data-part="chimney"></div>
+                        <div class="hotspot" style="left: 5%; top: 70%; width: 14%; height: 20%;" data-part="cowcatcher"></div>
+                        <div class="hotspot" style="left: 23%; top: 65%; width: 15%; height: 20%;" data-part="piston-area" data-correct="true"></div>
+                        <div class="hotspot" style="left: 40%; top: 64%; width: 40%; height: 30%;" data-part="wheels"></div>
+                        <div class="hotspot" style="left: 34%; top: 42%; width: 34%; height: 22%;" data-part="boiler"></div>
+                        <div class="hotspot" style="left: 69%; top: 31%; width: 16%; height: 30%;" data-part="cab"></div>
+                    </div>
+                    <div id="train-feedback" class="feedback">Click on the part where heat energy is converted into motion!</div>
+                    <div id="zoom-slider-container">
+                        <label for="train-zoom-slider">Zoom & Reveal:</label>
+                        <input type="range" id="train-zoom-slider" min="0" max="100" value="0" step="1" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="interactive-page" data-page-index="2">Interactive Content Page 3</div>
+            <div class="interactive-page" data-page-index="3">Interactive Content Page 4</div>
+            <div class="interactive-page" data-page-index="4">Interactive Content Page 5</div>
+            <div class="interactive-page" data-page-index="5">Interactive Content Page 6</div>
+            <div class="interactive-page" data-page-index="6">Interactive Content Page 7</div>
+            <div class="interactive-page" data-page-index="7">Interactive Content Page 8</div>
+            <div class="interactive-page" data-page-index="8">Interactive Content Page 9</div>
+            <div class="interactive-page" data-page-index="9">Interactive Content Page 10</div>
+            <div class="interactive-page" data-page-index="10">Interactive Content Page 11</div>
+            <div class="interactive-page" data-page-index="11">Interactive Content Page 12</div>
+            <div class="interactive-page" data-page-index="12"><h1 style='color: var(--active-section);'>🎉 You Did It! 🎉</h1></div>
+        </section>
+    </main>
+
+    <footer>
+        <button id="prev-btn" class="nav-button">Previous</button>
+        <button id="next-btn" class="nav-button">Next</button>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const learningContent = [
+                // Section 1: 2 pages
+                { section: 1, title: "Starting with Reality", text: "<i>Describing the physical phenomenon we wish to study</i><p>A locomotive engineer would like to know what temperature they need to maintain in the combustion chamber of a steam engine such that it runs with the highest efficiency or runs the longest for every unit of fuel?</p>" },
+                { section: 1, title: "Train Mechanics", text: "<h3>Train Energy Conversion</h3><p>Identify the part of the train where heat energy is primarily converted into mechanical motion to drive the wheels.</p>" },
+                // Section 2: 3 pages
+                { section: 2, title: "Idealization", text: "<h3>Idealization</h3><p>Content for Idealization.</p>" },
+                { section: 2, title: "Second Page of Sec 2", text: "<h3>Second Page</h3><p>Content for the second page of section 2.</p>" },
+                { section: 2, title: "Third Page of Sec 2", text: "<h3>Third Page</h3><p>Content for the third page of section 2.</p>" },
+                // Section 3: 2 pages
+                { section: 3, title: "Discretization", text: "<h3>Discretization</h3><p>Content for Discretization.</p>" },
+                { section: 3, title: "Case Study", text: "<h3>Case Study</h3><p>Case study analysis content.</p>" },
+                // Section 4: 2 pages
+                { section: 4, title: "Geometric Model", text: "<h3>Geometric Model</h3><p>Content for the Geometric model.</p>" },
+                { section: 4, title: "Second Page of Sec 4", text: "<h3>Second Page of Sec 4</h3><p>Content for the second page of section 4.</p>" },
+                // Section 5: 4 pages
+                { section: 5, title: "Algebraic Model", text: "<h3>Algebraic Model</h3><p>Content for the Algebraic model.</p>" },
+                { section: 5, title: "Project Planning", text: "<h3>Project Planning</h3><p>Project planning content.</p>" },
+                { section: 5, title: "Project Execution", text: "<h3>Project Execution</h3><p>Project execution content.</p>" },
+                { section: 5, title: "Conclusion", text: "<h3>Module Complete!</h3><p>Congratulations!</p>" },
+            ];
+
+            let currentPageIndex = 0;
+            const totalPages = learningContent.length;
+            const header = document.querySelector('header');
+            const textPanel = document.getElementById('text-panel');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const sectionBoxes = document.querySelectorAll('.section-box');
+            const progressLineFg = document.getElementById('progress-arrow-fg');
+            const interactivePages = document.querySelectorAll('.interactive-page');
+            let sectionCenterPoints = [];
+
+            function initializeInteractivity() {
+                const trainContainer = document.getElementById('train-interaction-container');
+                if(trainContainer) {
+                    const trainHotspots = trainContainer.querySelectorAll('.hotspot');
+                    const trainFeedback = document.getElementById('train-feedback');
+                    const trainZoomSlider = document.getElementById('train-zoom-slider');
+                    const trainZoomSliderContainer = document.getElementById('zoom-slider-container');
+                    const trainImageScaler = document.getElementById('train-image-scaler');
+                    const mainEngineImage = document.getElementById('main-engine-image');
+                    const pistonSchematic = document.getElementById('piston-schematic');
+
+                    trainHotspots.forEach(hotspot => {
+                        hotspot.addEventListener('click', function() {
+                            if (trainContainer.classList.contains('correctly-answered')) return;
+
+                            if (this.dataset.correct === 'true') {
+                                trainFeedback.textContent = 'Correct! Now use the slider to zoom in and reveal the schematic.';
+                                trainFeedback.className = 'feedback correct';
+                                trainZoomSliderContainer.classList.add('active');
+                                trainContainer.classList.add('correctly-answered');
+                            } else {
+                                trainFeedback.textContent = 'Not quite. That\'s the ' + this.dataset.part + '. Try again!';
+                                trainFeedback.className = 'feedback incorrect';
+                            }
+                        });
+                    });
+
+                    trainZoomSlider.addEventListener('input', function() {
+                        if (!trainContainer.classList.contains('correctly-answered')) return;
+
+                        const value = parseInt(this.value);
+                        const maxZoom = 2.5;
+
+                        if (value <= 50) {
+                            const zoomProgress = value / 50.0;
+                            const currentZoom = 1 + (maxZoom - 1) * zoomProgress;
+                            trainImageScaler.style.transform = `scale(${currentZoom})`;
+                            mainEngineImage.style.opacity = 1;
+                            pistonSchematic.style.opacity = 0;
+                        } else {
+                            trainImageScaler.style.transform = `scale(${maxZoom})`;
+                            const fadeProgress = (value - 50) / 50.0;
+                            mainEngineImage.style.opacity = 1 - fadeProgress;
+                            pistonSchematic.style.opacity = fadeProgress;
+                        }
+                    });
+                }
+            }
+
+            function calculateSectionCenterPoints() {
+                sectionCenterPoints = [];
+                const svgWidth = 1200;
+                const headerWidth = header.offsetWidth;
+                if (headerWidth === 0) return;
+                const scaleFactor = svgWidth / headerWidth;
+                sectionBoxes.forEach(box => {
+                    const rect = box.getBoundingClientRect();
+                    const headerRect = header.getBoundingClientRect();
+                    const centerX = (rect.left - headerRect.left + rect.width / 2) * scaleFactor;
+                    sectionCenterPoints.push(centerX);
+                });
+            }
+
+            function renderPage(pageIndex) {
+                currentPageIndex = pageIndex;
+                const currentPageData = learningContent[pageIndex];
+                textPanel.innerHTML = `<h2>${currentPageData.title}</h2>${currentPageData.text}`;
+                
+                interactivePages.forEach((page, index) => {
+                    page.classList.toggle('active-page', index === pageIndex);
+                });
+
+                if (currentPageIndex !== 1) {
+                    const trainContainer = document.getElementById('train-interaction-container');
+                    if(trainContainer) {
+                        const trainFeedback = document.getElementById('train-feedback');
+                        const trainZoomSlider = document.getElementById('train-zoom-slider');
+                        const trainZoomSliderContainer = document.getElementById('zoom-slider-container');
+                        const trainImageScaler = document.getElementById('train-image-scaler');
+                        const mainEngineImage = document.getElementById('main-engine-image');
+                        const pistonSchematic = document.getElementById('piston-schematic');
+                        
+                        trainContainer.classList.remove('correctly-answered');
+                        trainFeedback.textContent = 'Click on the part where heat energy is converted into motion!';
+                        trainFeedback.className = 'feedback';
+                        trainZoomSliderContainer.classList.remove('active');
+                        trainZoomSlider.value = "0";
+                        trainImageScaler.style.transform = 'scale(1)';
+                        if(mainEngineImage) mainEngineImage.style.opacity = 1;
+                        if(pistonSchematic) pistonSchematic.style.opacity = 0;
+                    }
+                }
+                
+                updateSections(currentPageData.section);
+                updateProgressBar();
+                updateNavButtons();
+            }
+
+            function updateSections(currentSectionNumber) {
+                sectionBoxes.forEach(box => {
+                    const section = parseInt(box.dataset.section);
+                    box.classList.remove('active', 'completed');
+                    if (section < currentSectionNumber) box.classList.add('completed');
+                    else if (section === currentSectionNumber) box.classList.add('active');
+                });
+            }
+
+            function updateProgressBar() {
+                if (sectionCenterPoints.length === 0) return;
+                const currentSection = learningContent[currentPageIndex].section;
+                const pagesInCurrentSection = learningContent.filter(p => p.section === currentSection);
+                const firstPageOfSectionIndex = learningContent.findIndex(p => p.section === currentSection);
+                const pagesCompletedInSection = currentPageIndex - firstPageOfSectionIndex;
+                const progressWithinSection = pagesInCurrentSection.length > 1 ? pagesCompletedInSection / (pagesInCurrentSection.length - 1) : 1;
+                const sectionIndexInArray = currentSection - 1;
+                const startX = sectionIndexInArray > 0 ? sectionCenterPoints[sectionIndexInArray - 1] : 0;
+                const endX = sectionCenterPoints[sectionIndexInArray];
+                const currentX = startX + (endX - startX) * progressWithinSection;
+                progressLineFg.setAttribute('x2', currentX);
+            }
+
+            function updateNavButtons() {
+                prevBtn.disabled = currentPageIndex === 0;
+                nextBtn.disabled = currentPageIndex === totalPages - 1;
+            }
+
+            prevBtn.addEventListener('click', () => { if (currentPageIndex > 0) renderPage(currentPageIndex - 1); });
+            nextBtn.addEventListener('click', () => { if (currentPageIndex < totalPages - 1) renderPage(currentPageIndex + 1); });
+            sectionBoxes.forEach(box => box.addEventListener('click', () => { const targetSection = parseInt(box.dataset.section); const firstPageOfSection = learningContent.findIndex(p => p.section === targetSection); const currentSection = learningContent[currentPageIndex].section; if(targetSection <= currentSection + 1) renderPage(firstPageOfSection); }));
+            window.addEventListener('resize', () => { calculateSectionCenterPoints(); updateProgressBar(); });
+
+            initializeInteractivity();
+            calculateSectionCenterPoints();
+            renderPage(0);
+        });
+    </script>
+</body>
+</html>
