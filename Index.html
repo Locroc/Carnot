@@ -78,7 +78,7 @@
 
         .train-interaction-container { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .train-image-wrapper { position: relative; width: 800px; height: 450px; overflow: hidden; border-radius: 8px; background-color: #f8f8f8; margin-bottom: 20px; }
-        #train-image-scaler { width: 100%; height: 100%; transition: transform 0.3s ease-in-out; transform-origin: 30% 75%; }
+        #train-image-scaler { width: 100%; height: 100%; transition: transform 0.3s ease-in-out; transform-origin: 20% 98%; }
         #train-image-scaler img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; transition: opacity 0.2s ease-in-out; }
         #piston-schematic { opacity: 0; }
         .hotspot { position: absolute; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s ease, background-color 0.2s ease; border-radius: 5px; }
@@ -87,6 +87,140 @@
         #train-feedback { margin-top: 10px; font-size: 1em; }
         #zoom-slider-container { width: 80%; max-width: 500px; margin-top: 10px; visibility: hidden; opacity: 0; transition: opacity 0.3s ease; }
         #zoom-slider-container.active { visibility: visible; opacity: 1; }
+
+        /* --- Schematic Styles --- */
+        .schematic-container {
+            width: 90%;
+            max-width: 600px;
+        }
+        .schematic-container text {
+            fill: #333;
+        }
+
+        /* --- Pop-up Quiz Styles --- */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+        }
+        .popup-quiz {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1001;
+            text-align: left;
+        }
+        .popup-quiz h3 {
+            margin-top: 0;
+        }
+        .quiz-options label {
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .quiz-options label:hover {
+            background-color: #f0f2f5;
+        }
+        .popup-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .popup-overlay.hidden, .popup-quiz.hidden {
+            display: none;
+        }
+        .svg-button {
+            cursor: pointer;
+        }
+
+        /* --- Reversibility Interaction Styles --- */
+        .reversibility-container {
+            width: 90%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .parameter-display {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+        .piston-system {
+            width: 100%;
+            padding: 20px 0;
+        }
+        .cylinder {
+            position: relative;
+            height: 100px;
+            background-color: #e9ecef;
+            border: 3px solid #6c757d;
+            border-radius: 5px;
+        }
+        .piston {
+            position: absolute;
+            top: 0;
+            left: 20%; /* Initial position */
+            width: 20%;
+            height: 100%;
+            background-color: #343a40;
+            border-right: 5px solid #212529;
+            box-sizing: border-box;
+        }
+        .slider-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+        .slider-control input[type="range"] {
+            flex-grow: 1;
+        }
+        .slider-control span {
+            font-weight: bold;
+        }
+
+        .piston-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows slider interaction */
+        }
+        .shaft {
+            fill: #6c757d;
+        }
+        .opening {
+            fill: #adb5bd;
+        }
+
     </style>
 </head>
 <body>
@@ -111,7 +245,7 @@
         <section id="graphics-panel">
             <div class="interactive-page" data-page-index="0">
                 <div class="train-image-wrapper">
-                    <img src="Engine.jpg" alt="A steam train engine"> 
+                    <img src="Engine.jpg" alt="A steam train engine" style="max-width: 100%; max-height: 100%;"> 
                 </div>
             </div>
             
@@ -137,8 +271,78 @@
                 </div>
             </div>
             
-            <div class="interactive-page" data-page-index="2">Interactive Content Page 3</div>
-            <div class="interactive-page" data-page-index="3">Interactive Content Page 4</div>
+            <div class="interactive-page" data-page-index="2">
+                <div class="schematic-container">
+                    <svg viewBox="0 0 500 382" preserveAspectRatio="xMidYMid meet">
+                        <a id="hot-source-btn" class="svg-button">
+                            <rect x="50" y="10" width="400" height="80" fill="#fff3e0" stroke="#ffb74d" stroke-width="2" rx="10"></rect>
+                            <text x="250" y="45" font-family="sans-serif" font-size="20" text-anchor="middle" font-weight="bold">Hot Source</text>
+                            <text x="250" y="70" font-family="sans-serif" font-size="18" text-anchor="middle">Temperature: T<tspan dy ="7" font-size="10">Source</tspan></text>
+                        </a>
+                        
+                        <a id="cold-sink-btn" class="svg-button">
+                            <rect x="50" y="300" width="400" height="80" fill="#e3f2fd" stroke="#90caf9" stroke-width="2" rx="10"></rect>
+                            <text x="250" y="335" font-family="sans-serif" font-size="20" text-anchor="middle" font-weight="bold">Cold Sink</text>
+                            <text x="250" y="360" font-family="sans-serif" font-size="18" text-anchor="middle">Temperature: T<tspan dy ="7" font-size="10">Sink</tspan></text>
+                        </a>
+
+                        <g id="g3" transform="translate(-140.971138,-380.62569) scale(4.5)"><path id="rect1" style="fill:#3e5563;fill-opacity:1;stroke-width:0.301507;stroke-dasharray:0.301507, 0.301507" d="m 69.971523,119.62569 h 26.293125 v 1.39468 H 71.095122 v 11.78379 h 25.169692 v 1.39535 H 69.971132 Z"></path><path id="rect2-4" style="fill:#80afae;stroke-width:0.460031;stroke-dasharray:0.460031, 0.460031" d="m 81.200795,127.34233 v -1.33445 h 19.133375 v 1.33445 z m -0.795107,-6.29612 h 0.928055 v 11.74923 h -0.928055 z"></path></g>
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#d32f2f"></polygon>
+                            </marker>
+                            <marker id="arrowhead-work" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#28a745"></polygon>
+                            </marker>
+                            <marker id="arrowhead-cold" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#007bff"></polygon>
+                            </marker>
+                            <marker id="arrowhead-diss" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#fff200"></polygon>
+                            </marker>
+                        </defs>
+                        <line x1="250" y1="90" x2="250" y2="115" stroke="#d32f2f" stroke-width="4" marker-end="url(#arrowhead)"></line>
+                        <text x="275" y="128" font-family="sans-serif" font-size="24" font-style="italic" fill="#d32f2f">Q<tspan dy ="7" font-size="12">H</tspan></text>
+
+                        <line x1="320" y1="190" x2="360" y2="190" stroke="#28a745" stroke-width="4" marker-end="url(#arrowhead-work)"></line>
+                        <text x="410" y="198" font-family="sans-serif" font-size="24" font-style="italic" fill="#28a745">W</text>
+
+                        <line x1="250" y1="225" x2="250" y2="260" stroke="#007bff" stroke-width="4" marker-end="url(#arrowhead-cold)"></line>
+                        <text x="275" y="260" font-family="sans-serif" font-size="24" font-style="italic" fill="#007bff">Q<tspan dy ="7" font-size="12">C</tspan></text>
+
+                        <line x1="220" y1="115" x2="180" y2="115" stroke="#fff200" stroke-width="4" marker-end="url(#arrowhead-diss)"></line>
+                        <text x="50" y="120" font-family="sans-serif" font-size="16" font-style="italic" fill="#28a745">Dissipation</text>
+
+                        <line x1="340" y1="200" x2="370" y2="220" stroke="#fff200" stroke-width="4" marker-end="url(#arrowhead-diss)"></line>
+                        <text x="410" y="250" font-family="sans-serif" font-size="16" font-style="italic" fill="#28a745">Dissipation</text>
+
+                    </svg>
+                    <img id="piston-schematic" src="piston-close.svg" alt="Schematic of a steam engine piston" style="max-width: 100%; max-height: 100%;">
+                </div>
+            </div>
+            <div class="interactive-page" data-page-index="3">
+                <div class="reversibility-container">
+                    <div class="parameter-display">
+                        <div>Pressure: <br> <span id="pressure-val">1.67</span> atm</div>
+                        <div>Volume: <br><span id="volume-val">1.20</span> L</div>
+                        <div>Temperature: <br> <span id="temp-val">300</span> K</div>
+                    </div>
+                    <div class="piston-system">
+                        <div class="cylinder">
+                            <div id="piston" class="piston"></div>
+                            <svg class="piston-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <rect id="piston-shaft" x="0" y="45" width="40" height="10" class="shaft" />
+                                <rect x="90" y="40" width="10" height="20" class="opening" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="slider-control">
+                        <span>State A</span>
+                        <input type="range" id="state-slider" min="0" max="100" value="0" step="1">
+                        <span>State B</span>
+                    </div>
+                </div>
+            </div>
             <div class="interactive-page" data-page-index="4">Interactive Content Page 5</div>
             <div class="interactive-page" data-page-index="5">Interactive Content Page 6</div>
             <div class="interactive-page" data-page-index="6">Interactive Content Page 7</div>
@@ -148,6 +352,35 @@
             <div class="interactive-page" data-page-index="10">Interactive Content Page 11</div>
             <div class="interactive-page" data-page-index="11">Interactive Content Page 12</div>
             <div class="interactive-page" data-page-index="12"><h1 style='color: var(--active-section);'>🎉 You Did It! 🎉</h1></div>
+
+            <div id="popup-overlay" class="popup-overlay hidden"></div>
+
+            <div id="hot-source-quiz" class="popup-quiz hidden">
+                <h3>🔥 Hot Source Quiz</h3>
+                <p>What is the primary role of the "Hot Source" in a real steam engine?</p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="hot_source_q" value="wrong1"> The wheels turning</label>
+                    <label><input type="radio" name="hot_source_q" value="correct"> The burning fuel in the furnace</label>
+                    <label><input type="radio" name="hot_source_q" value="wrong2"> The escaping steam</label>
+                </div>
+                <button class="nav-button quiz-submit-btn">Check Answer</button>
+                <div class="feedback"></div>
+                <button class="popup-close-btn">&times;</button>
+            </div>
+
+            <div id="cold-sink-quiz" class="popup-quiz hidden">
+                <h3>💨 Cold Sink Quiz</h3>
+                <p>What acts as the "Cold Sink" where waste heat is expelled?</p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="cold_sink_q" value="correct"> The surrounding atmosphere</label>
+                    <label><input type="radio" name="cold_sink_q" value="wrong1"> The water tank</label>
+                    <label><input type="radio" name="cold_sink_q" value="wrong2"> The metal body of the engine</label>
+                </div>
+                <button class="nav-button quiz-submit-btn">Check Answer</button>
+                <div class="feedback"></div>
+                <button class="popup-close-btn">&times;</button>
+            </div>
+
         </section>
     </main>
 
@@ -161,22 +394,22 @@
             const learningContent = [
                 // Section 1: 2 pages
                 { section: 1, title: "Starting with Reality", text: "<i>Describing the physical phenomenon we wish to study</i><p>A locomotive engineer would like to know what temperature they need to maintain in the combustion chamber of a steam engine such that it runs with the highest efficiency or runs the longest for every unit of fuel?</p>" },
-                { section: 1, title: "Train Mechanics", text: "<h3>Train Energy Conversion</h3><p>Identify the part of the train where heat energy is primarily converted into mechanical motion to drive the wheels.</p>" },
+                { section: 1, title: "Isolating the system", text: "<i>Focusing where the conversion happens</i><p>Identify the part of the train where heat energy is primarily converted into mechanical motion to drive the wheels.</p>" },
                 // Section 2: 3 pages
-                { section: 2, title: "Idealization", text: "<h3>Idealization</h3><p>Content for Idealization.</p>" },
-                { section: 2, title: "Second Page of Sec 2", text: "<h3>Second Page</h3><p>Content for the second page of section 2.</p>" },
-                { section: 2, title: "Third Page of Sec 2", text: "<h3>Third Page</h3><p>Content for the third page of section 2.</p>" },
+                { section: 2, title: "Idealization", text: "<i>using symbols to simplify</i><p>As we are mostly concerned about energy and its transfer, we can simplify a complex structure such as a steam locomotive engine in the form of symbols to make the flow of energy clear. As you can see, as there is no such thing as perfectly insulating or perfectly consucting materials, some amount of energy dissipates through the various components in the form of heat and sound</p>" },
+                { section: 2, title: "Idealizing further", text: "<i>Removing variables</i><p>We want find the maximum theoretical value for efficiency, therefore, as we can only control dissipation upto a certain extent, it is beneficial to only take into account the parameters that we can control. These include the temperature of the source, and that of the sink(even this cannot be controled, but atleast can be measured with significant confidence), pressure and the volume. <br> <br> Simultaneously, we assume all dissipation to be zero. A consequence of this is that moving from one state A to another state B and then coming back to A will not result in a change in the parameters of A. This would not have been possible in a real scenario as dissipation will happen in both transitions resulting in deviation of some parameters when coming back. Such an idealized process where any change can essentially be reversed without affecting the parameters is called a <b>Reversible process</b> </p>" },
+                { section: 2, title: "Idealized system", text: "<h3>Third Page</h3><p>The final system assuming no dissipation</p>" },
                 // Section 3: 2 pages
-                { section: 3, title: "Discretization", text: "<h3>Discretization</h3><p>Content for Discretization.</p>" },
-                { section: 3, title: "Case Study", text: "<h3>Case Study</h3><p>Case study analysis content.</p>" },
+                { section: 3, title: "Discretization", text: "<h3>Discretization</h3><p>Seperating the steps</p>" },
+                { section: 3, title: "The Focus", text: "<h3>Choose</h3><p>Choose what steps will be required for the calculation of work done</p>" },
                 // Section 4: 2 pages
-                { section: 4, title: "Geometric Model", text: "<h3>Geometric Model</h3><p>Content for the Geometric model.</p>" },
-                { section: 4, title: "Second Page of Sec 4", text: "<h3>Second Page of Sec 4</h3><p>Content for the second page of section 4.</p>" },
+                { section: 4, title: "Graphing", text: "<h3>Geometric Model</h3><p>Graphical representation</p>" },
+                { section: 4, title: "The Shaded Area", text: "<h3>Second Page of Sec 4</h3><p>The shaded area explanation</p>" },
                 // Section 5: 4 pages
-                { section: 5, title: "Algebraic Model", text: "<h3>Algebraic Model</h3><p>Content for the Algebraic model.</p>" },
-                { section: 5, title: "Project Planning", text: "<h3>Project Planning</h3><p>Project planning content.</p>" },
-                { section: 5, title: "Project Execution", text: "<h3>Project Execution</h3><p>Project execution content.</p>" },
-                { section: 5, title: "Conclusion", text: "<h3>Module Complete!</h3><p>Congratulations!</p>" },
+                { section: 5, title: "The Math", text: "<h3>1</h3><p>Clarifying what we have to find and how to find it using basic thermodynamic principle</p>" },
+                { section: 5, title: "Isothermal Work", text: "<h3>2</h3><p>Calculating the isothermal work</p>" },
+                { section: 5, title: "Adiabatic work", text: "<h3>3</h3><p>mathematical representation of why the Adiabatic work is not being taken into account</p>" },
+                { section: 5, title: "Maximum efficiency", text: "<h3>4</h3><p>Final equation for efficiency</p>" },
             ];
 
             let currentPageIndex = 0;
@@ -237,6 +470,87 @@
                         }
                     });
                 }
+                // --- Pop-up Quiz Interaction ---
+                const popupOverlay = document.getElementById('popup-overlay');
+                const allPopups = document.querySelectorAll('.popup-quiz');
+
+                function openPopup(popupId) {
+                    const popup = document.getElementById(popupId);
+                    if (popup) {
+                        popupOverlay.classList.remove('hidden');
+                        popup.classList.remove('hidden');
+                    }
+                }
+
+                function closeAllPopups() {
+                    popupOverlay.classList.add('hidden');
+                    allPopups.forEach(p => p.classList.add('hidden'));
+                }
+
+                // --- Reversibility Interaction ---
+                const stateSlider = document.getElementById('state-slider');
+                if (stateSlider) {
+                    const piston = document.getElementById('piston');
+                    const pressureVal = document.getElementById('pressure-val');
+                    const volumeVal = document.getElementById('volume-val');
+                    const tempVal = document.getElementById('temp-val'); // Kept for display
+
+                    stateSlider.addEventListener('input', function() {
+                        const sliderValue = parseInt(this.value); // 0 to 100
+
+                        // Define arbitrary start and end points as percentages of the container width
+                        const travelStart = 20; // Start at 20% from the left
+                        const travelEnd = 25;   // End at 70% from the left
+                        const travelRange = travelEnd - travelStart;
+
+                        // Map the slider's 0-100 value to our new travel range
+                        const pistonPosition = travelStart + (sliderValue / 100) * travelRange;
+                        piston.style.left = `${pistonPosition}%`;
+
+                        // Find the shaft and update its width to follow the piston
+                        const shaft = document.getElementById('piston-shaft');
+                        if(shaft) {
+                            shaft.setAttribute('width', pistonPosition);
+                        }
+
+                        // Calculate Volume and Pressure based on the new range
+                        // Let Volume range from 1.20L to 1.70L
+                        const volume = 1.20 - (sliderValue / 100.0) * 0.5;
+                        const pressure = 1.0 / volume; // P*V = 2.0 (our constant)
+                        
+                        // Update the display
+                        pressureVal.textContent = pressure.toFixed(2);
+                        volumeVal.textContent = volume.toFixed(2);
+                    });
+                }
+
+                document.getElementById('hot-source-btn')?.addEventListener('click', () => openPopup('hot-source-quiz'));
+                document.getElementById('cold-sink-btn')?.addEventListener('click', () => openPopup('cold-sink-quiz'));
+                
+                popupOverlay.addEventListener('click', closeAllPopups);
+                document.querySelectorAll('.popup-close-btn').forEach(btn => btn.addEventListener('click', closeAllPopups));
+
+                document.querySelectorAll('.quiz-submit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const parentPopup = this.closest('.popup-quiz');
+                        const selectedAnswer = parentPopup.querySelector('input:checked');
+                        const feedbackEl = parentPopup.querySelector('.feedback');
+
+                        if (!selectedAnswer) {
+                            feedbackEl.textContent = 'Please select an answer.';
+                            feedbackEl.className = 'feedback incorrect';
+                            return;
+                        }
+                        
+                        if (selectedAnswer.value === 'correct') {
+                            feedbackEl.textContent = 'Correct! Well done.';
+                            feedbackEl.className = 'feedback correct';
+                        } else {
+                            feedbackEl.textContent = 'Not quite. Think about the source of energy or where waste goes.';
+                            feedbackEl.className = 'feedback incorrect';
+                        }
+                    });
+                });
             }
 
             function calculateSectionCenterPoints() {
@@ -280,12 +594,26 @@
                         trainImageScaler.style.transform = 'scale(1)';
                         if(mainEngineImage) mainEngineImage.style.opacity = 1;
                         if(pistonSchematic) pistonSchematic.style.opacity = 0;
+                        } else if (currentPageIndex !== 4) {
+                        // Reset popups
+                        document.getElementById('popup-overlay')?.classList.add('hidden');
+                        document.querySelectorAll('.popup-quiz').forEach(p => p.classList.add('hidden'));
+                        } else if (currentPageIndex !== 5) {
+                            // Reset reversibility slider
+                            const stateSlider = document.getElementById('state-slider');
+                            if (stateSlider) {
+                                stateSlider.value = 0; // Set slider to the start
+                                // Manually trigger the input event to reset the display
+                                stateSlider.dispatchEvent(new Event('input'));
+                            }
+                        }
                     }
-                }
+                
                 
                 updateSections(currentPageData.section);
                 updateProgressBar();
                 updateNavButtons();
+                
             }
 
             function updateSections(currentSectionNumber) {
