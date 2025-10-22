@@ -187,7 +187,7 @@
             position: absolute;
             top: 0;
             left: 20%; /* Initial position */
-            width: 20%;
+            width: 10%;
             height: 100%;
             background-color: #343a40;
             border-right: 5px solid #212529;
@@ -219,6 +219,77 @@
         }
         .opening {
             fill: #adb5bd;
+        }
+
+        /* --- Carnot Cycle Interaction Styles --- */
+        .carnot-container {
+            width: 90%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        #carnot-phase-display {
+            margin: 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            width: 80%;
+            text-align: center;
+        }
+        .carnot-cylinder {
+            transition: background-color 0.3s ease;
+        }
+        .carnot-cylinder.hot {
+            background-color: #e9290b; /* Represents hot reservoir (light red) */
+        }
+        .carnot-cylinder.cold {
+            background-color: #5116d0; /* Represents cold reservoir (light blue) */
+        }
+        .carnot-cylinder.insulated {
+            background-color: #b3a1a1; /* Represents insulation (distinct gray) */
+        }
+        .carnot-legend .color-box.hot { background-color: #e9290b; }
+        .carnot-legend .color-box.cold { background-color: #5116d0; }
+        .carnot-legend .color-box.insulated { background-color: #b3a1a1; }
+
+        .carnot-legend {
+            display: flex;
+            gap: 20px;
+            font-size: 0.8em;
+        }
+        .carnot-legend .color-box {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            vertical-align: middle;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+        
+        .parameter-display {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-family: monospace;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .piston-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .shaft {
+            fill: #6c757d;
         }
 
     </style>
@@ -329,9 +400,9 @@
                     </div>
                     <div class="piston-system">
                         <div class="cylinder">
-                            <div id="piston" class="piston"></div>
+                            <div id="piston" class="piston" style="left:20%;"></div>
                             <svg class="piston-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
-                                <rect id="piston-shaft" x="0" y="45" width="40" height="10" class="shaft" />
+                                <rect id="piston-shaft" x="0" y="45" width="20" height="10" class="shaft" />
                                 <rect x="90" y="40" width="10" height="20" class="opening" />
                             </svg>
                         </div>
@@ -343,8 +414,83 @@
                     </div>
                 </div>
             </div>
-            <div class="interactive-page" data-page-index="4">Interactive Content Page 5</div>
-            <div class="interactive-page" data-page-index="5">Interactive Content Page 6</div>
+            <div class="interactive-page" data-page-index="4">
+                <div class="schematic-container">
+                    <svg viewBox="0 0 500 382" preserveAspectRatio="xMidYMid meet">
+                        <a id="hot-source-btn" class="svg-button">
+                            <rect x="50" y="10" width="400" height="80" fill="#fff3e0" stroke="#ffb74d" stroke-width="2" rx="10"> </rect>
+                            <text x="250" y="45" font-family="sans-serif" font-size="20" text-anchor="middle" font-weight="bold">Hot Source</text>
+                            <text x="250" y="70" font-family="sans-serif" font-size="18" text-anchor="middle">Temperature: T<tspan dy ="7" font-size="10">Source</tspan></text>
+                        </a>
+                        
+                        <a id="cold-sink-btn" class="svg-button">
+                            <rect x="50" y="300" width="400" height="80" fill="#e3f2fd" stroke="#90caf9" stroke-width="2" rx="10"></rect>
+                            <text x="250" y="335" font-family="sans-serif" font-size="20" text-anchor="middle" font-weight="bold">Cold Sink</text>
+                            <text x="250" y="360" font-family="sans-serif" font-size="18" text-anchor="middle">Temperature: T<tspan dy ="7" font-size="10">Sink</tspan></text>
+                        </a>
+
+                        <g id="g3" transform="translate(-140.971138,-380.62569) scale(4.5)"><path id="rect1" style="fill:#3e5563;fill-opacity:1;stroke-width:0.301507;stroke-dasharray:0.301507, 0.301507" d="m 69.971523,119.62569 h 26.293125 v 1.39468 H 71.095122 v 11.78379 h 25.169692 v 1.39535 H 69.971132 Z"></path><path id="rect2-4" style="fill:#80afae;stroke-width:0.460031;stroke-dasharray:0.460031, 0.460031" d="m 81.200795,127.34233 v -1.33445 h 19.133375 v 1.33445 z m -0.795107,-6.29612 h 0.928055 v 11.74923 h -0.928055 z"></path></g>
+                        <defs>
+                            <marker id="arrowhead-2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#d32f2f"></polygon>
+                            </marker>
+                            <marker id="arrowhead-work-2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#28a745"></polygon>
+                            </marker>
+                            <marker id="arrowhead-cold-2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#007bff"></polygon>
+                            </marker>
+                            <marker id="arrowhead-diss-2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#fff200"></polygon>
+                            </marker>
+                        </defs>
+                        <line x1="250" y1="90" x2="250" y2="115" stroke="#d32f2f" stroke-width="4" marker-end="url(#arrowhead-2)"></line>
+                        <text x="275" y="128" font-family="sans-serif" font-size="24" font-style="italic" fill="#d32f2f">Q<tspan dy ="7" font-size="12">H</tspan></text>
+
+                        <line x1="320" y1="190" x2="360" y2="190" stroke="#28a745" stroke-width="4" marker-end="url(#arrowhead-work-2)"></line>
+                        <text x="410" y="198" font-family="sans-serif" font-size="24" font-style="italic" fill="#28a745">W</text>
+
+                        <line x1="250" y1="225" x2="250" y2="260" stroke="#007bff" stroke-width="4" marker-end="url(#arrowhead-cold-2)"></line>
+                        <text x="275" y="260" font-family="sans-serif" font-size="24" font-style="italic" fill="#007bff">Q<tspan dy ="7" font-size="12">C</tspan></text>
+
+                        <line x1="220" y1="115" x2="180" y2="115" stroke="#fff200" stroke-width="4" opacity="0.25" marker-end="url(#arrowhead-diss-2)"></line>
+                        <text x="50" y="120" font-family="sans-serif" font-size="16" font-style="italic" opacity="0.25" fill="#28a745">Dissipation</text>
+
+                        <line x1="340" y1="200" x2="370" y2="220" stroke="#fff200" stroke-width="4" opacity="0.25" marker-end="url(#arrowhead-diss-2)"></line>
+                        <text x="410" y="250" font-family="sans-serif" font-size="16" font-style="italic" opacity="0.25" fill="#28a745">Dissipation</text>
+
+                    </svg>
+                    <img id="piston-schematic" src="piston-close.svg" alt="Schematic of a steam engine piston" style="max-width: 100%; max-height: 100%;">
+                </div>
+            </div>
+            <div class="interactive-page" data-page-index="5">
+                <div class="carnot-container">
+                    <div class="parameter-display">
+                        <div>Pressure: <span id="carnot-pressure">2.00</span> atm</div>
+                        <div>Volume: <span id="carnot-volume">1.00</span> L</div>
+                        <div>Temp: <span id="carnot-temp">600</span> K</div>
+                    </div>
+                    <h3 id="carnot-phase-display">Step 1: Isothermal Expansion</h3>
+                    <div class="piston-system">
+                        <div id="carnot-cylinder" class="cylinder carnot-cylinder hot">
+                            <div id="carnot-piston" class="piston" style="left:40%;"></div>
+                            <svg class="piston-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <rect id="carnot-piston-shaft" x="50" y="45" width="50" height="10" class="shaft" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="slider-control">
+                        <span>Start</span>
+                        <input type="range" id="carnot-slider" min="0" max="100" value="0" step="1">
+                        <span>End Cycle</span>
+                    </div>
+                    <div class="carnot-legend">
+                        <p><span class="color-box hot"></span> On Hot Reservoir</p>
+                        <p><span class="color-box cold"></span> On Cold Reservoir</p>
+                        <p><span class="color-box insulated"></span> Insulated</p>
+                    </div>
+                </div>
+            </div>
             <div class="interactive-page" data-page-index="6">Interactive Content Page 7</div>
             <div class="interactive-page" data-page-index="7">Interactive Content Page 8</div>
             <div class="interactive-page" data-page-index="8">Interactive Content Page 9</div>
@@ -551,6 +697,74 @@
                         }
                     });
                 });
+                // --- Carnot Cycle Interaction ---
+                const carnotSlider = document.getElementById('carnot-slider');
+                if (carnotSlider) {
+                    const piston = document.getElementById('carnot-piston');
+                    const shaft = document.getElementById('carnot-piston-shaft');
+                    const cylinder = document.getElementById('carnot-cylinder');
+                    const phaseDisplay = document.getElementById('carnot-phase-display');
+                    const pressureDisplay = document.getElementById('carnot-pressure');
+                    const volumeDisplay = document.getElementById('carnot-volume');
+                    const tempDisplay = document.getElementById('carnot-temp');
+
+                    const travelStart = 40; // Piston starts at 40%
+                    const travelEnd = 80;   // Piston ends at 80%
+                    const travelRange = travelEnd - travelStart;
+                    const pistonWidth = 10; // Piston is 20% wide
+
+                    carnotSlider.addEventListener('input', function() {
+                        const value = parseInt(this.value); // 0-100
+                        let pistonPosition, volume, pressure, temp;
+                        const V1 = 1.0, V2 = 1.2, T_H = 900, T_C = 300, nR = 0.0821; // Gas constants for calculation
+
+                        cylinder.classList.remove('hot', 'cold', 'insulated');
+
+                        if (value <= 50) { // Expansion Phase
+                            const expansionProgress = value / 50.0;
+                            pistonPosition = travelStart + expansionProgress * travelRange;
+                            volume = V1 + expansionProgress * (V2 - V1);
+
+                            if (value <= 35) { // Step 1: Isothermal Expansion
+                                phaseDisplay.textContent = 'Step 1: Isothermal Expansion';
+                                temp = T_H;
+                                pressure = nR * temp / volume; // final = 21.6052 vol_final = 1.14
+                                cylinder.classList.add('hot');
+                            } else { // Step 2: Adiabatic Expansion
+                                phaseDisplay.textContent = 'Step 2: Adiabatic Expansion';
+                                temp = (T_H * 26.2975 * Math.pow(volume, -0.5)) / 24.63; // Simplified adiabatic cooling
+                                pressure = nR * temp / volume;
+                                cylinder.classList.add('insulated');
+                            }
+                        } else { // Compression Phase
+                            const compressionProgress = (value - 50) / 50.0;
+                            pistonPosition = travelEnd - compressionProgress * travelRange;
+                            volume = V2 - compressionProgress * (V2 - V1);
+
+                            if (value <= 85) { // Step 3: Isothermal Compression
+                                phaseDisplay.textContent = 'Step 3: Isothermal Compression';
+                                temp = T_C;
+                                pressure = nR * temp / volume;
+                                cylinder.classList.add('cold');
+                            } else { // Step 4: Adiabatic Compression
+                                phaseDisplay.textContent = 'Step 4: Adiabatic Compression';
+                                temp = T_C * Math.pow((V1 + (V2 - V1)/2) / volume, -0.4); // Simplified adiabatic heating
+                                pressure = nR * temp / volume;
+                                cylinder.classList.add('insulated');
+                            }
+                        }
+                        
+                        // Update visuals
+                        piston.style.left = `${pistonPosition}%`;
+                        shaft.setAttribute('x', pistonPosition + pistonWidth);
+                        shaft.setAttribute('width', 100 - (pistonPosition + pistonWidth));
+
+                        // Update parameter display
+                        pressureDisplay.textContent = pressure.toFixed(2);
+                        volumeDisplay.textContent = volume.toFixed(2);
+                        tempDisplay.textContent = Math.round(temp);
+                    });
+                }
             }
 
             function calculateSectionCenterPoints() {
@@ -606,8 +820,15 @@
                                 // Manually trigger the input event to reset the display
                                 stateSlider.dispatchEvent(new Event('input'));
                             }
-                        }
+                        } else if (currentPageIndex !== 6) {
+                    // Reset Carnot cycle slider
+                    const carnotSlider = document.getElementById('carnot-slider');
+                    if (carnotSlider) {
+                        carnotSlider.value = 0;
+                        carnotSlider.dispatchEvent(new Event('input'));
                     }
+                    }
+                }
                 
                 
                 updateSections(currentPageData.section);
